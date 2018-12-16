@@ -4,7 +4,7 @@
 #define PIN         0
 
 // any pin with analog input (used to initialize random number generator)
-#define RNDPIN      5
+#define RNDPIN      2
 
 // number of LEDs (NeoPixels) in your strip
 // (please note that you need 3 bytes of RAM available for each pixel)
@@ -20,30 +20,16 @@
 // decrease to speed up, increase to slow down (it's not a delay actually)
 #define DELAY       5000
 
-// set to 1 to display FPS rate
-#define DEBUG       0
-
-// if true, wrap color wave over the edge (used for circular stripes)
-#define WRAP        1
-
-
 Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
 // we have 3 color spots (reg, green, blue) oscillating along the strip with different speeds
 float spdr, spdg, spdb;
 float offset;
 
-#if DEBUG
-// track fps rate
-long nextms = 0;
-int pfps = 0, fps = 0;
-#endif
-
 // the real exponent function is too slow, so I created an approximation (only for x < 0)
 float myexp(float x) {
   return (1.0/(1.0-(0.634-1.344*x)*x));
 }
-
 
 void setup() {
   // initialize pseudo-random number generator with some random value
@@ -84,11 +70,6 @@ void loop() {
     float dr = ppos-posr;
     float dg = ppos-posg;
     float db = ppos-posb;
-#if WRAP
-    dr = dr - floor(dr + 0.5);
-    dg = dg - floor(dg + 0.5);
-    db = db - floor(db + 0.5);
-#endif
 
     // set each color component from 0 to max BRIGHTNESS, according to Gaussian distribution
     strip.setPixelColor(i,
@@ -97,19 +78,6 @@ void loop() {
       constrain(BRIGHTNESS*myexp(-FOCUS*db*db),0,BRIGHTNESS)
       );
   }
-
-#if DEBUG
-  // keep track of FPS rate
-  fps++;
-  if (ms>nextms) {
-    // 1 second passed – reset counter
-    nextms = ms + 1000;
-    pfps = fps;
-    fps = 0;
-  }
-  // show FPS rate by setting one pixel to white
-  strip.setPixelColor(pfps,BRIGHTNESS,BRIGHTNESS,BRIGHTNESS);
-#endif
 
   // send data to LED strip
   strip.show();
